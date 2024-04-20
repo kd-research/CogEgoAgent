@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(cog-agent VERSION 0.1.0)
+project(cog-ai VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,10 +26,10 @@ set(EXTERNAL_LIBS
 )
 
 link_directories(external/steersuite/build/lib)
+include_directories(SYSTEM ${EXTERNAL_INCLUDE_DIRS})
 
-add_library(cog-agent SHARED ${SOURCE_FILES})
+add_library(cog-ai SHARED ${SOURCE_FILES})
 
-target_include_directories(cog-agent PUBLIC include)
-target_include_directories(cog-agent PRIVATE ${EXTERNAL_INCLUDE_DIRS})
+target_include_directories(cog-ai PUBLIC include)
 
-target_link_libraries(cog-agent ${EXTERNAL_LIBS})
+target_link_libraries(cog-ai ${EXTERNAL_LIBS})
