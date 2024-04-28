@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-O0 -ggdb")
 
 add_compile_definitions(ENABLE_GUI)
+add_compile_definitions(ENABLE_GLFW)
 
 set(SOURCE_FILES
 	src/CogAIModule.cpp
@@ -24,6 +25,7 @@ set(EXTERNAL_INCLUDE_DIRS
 	external/steersuite/steerlib/include
 	external/steersuite/util/include
 	external/steersuite/external
+	external/steersuite/external/imgui
 	/usr/include
 	/usr/local/include
 )

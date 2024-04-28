@@ -55,6 +55,7 @@ public:
 	void preprocessSimulation();
 	void initializeSimulation();
 	void cleanupSimulation();
+	void draw();
 
 protected:
 	std::string logFilename;
