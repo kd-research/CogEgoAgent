@@ -5,8 +5,9 @@
 #include <queue>
 #include "SteerLib.h"
 #include "CogAIModule.h"
+#include "CogAlgorithm.h"
 
-class CogAgent : public SteerLib::AgentInterface
+class CogAgent : public CogAlgorithm
 {
 public:
 	CogAgent();
@@ -43,6 +44,8 @@ public:
 
 protected:
 	virtual SteerLib::EngineInterface * getSimulationEngine();
+	bool prepareCollisionQuery();
+	bool prepareGoalQuery();
 
 private:
 	bool disable_when_goal_reached();

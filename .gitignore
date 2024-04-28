@@ -4,3 +4,4 @@ doc/*
 !doc/doxyfile
 
 !**/.keep
+doc
