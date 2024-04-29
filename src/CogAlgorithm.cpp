@@ -1,3 +1,6 @@
+#include <array>
+
+#include "imgui.h"
 #include "CogAlgorithm.h"
 #include "utils.h"
 
@@ -99,20 +102,6 @@ Util::Vector CogAlgorithm::compute_obstacle_collision_force()
 	return obstacle_collision_force;
 }
 
-void CogAlgorithm::check_neighbors()
-{
-	// Check the neighbors
-	_neighbors.clear();
-	getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
-			_position.x-(this->_radius + AGENT_QUERY_RADIUS),
-			_position.x+(this->_radius + AGENT_QUERY_RADIUS),
-			_position.z-(this->_radius + AGENT_QUERY_RADIUS),
-			_position.z+(this->_radius + AGENT_QUERY_RADIUS),
-			dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
-	// TODO: Separate the neighbors into agents and obstacles, now all are considered agents
-
-}
-
 void CogAlgorithm::apply_rigid_body_force(const Util::Vector & force, float dt)
 {
 	// Update the rigid body
@@ -122,6 +111,7 @@ void CogAlgorithm::apply_rigid_body_force(const Util::Vector & force, float dt)
 
 	_velocity += acceleration * dt;
 	_velocity = Util::clamp(_velocity, AGENT_MAX_SPEED);
+	_forward = Util::normalize(_velocity);
 
 	auto new_position = _position + _velocity * dt;
 	Util::AxisAlignedBox oldBounds(_position.x - _radius, _position.x + _radius, 0.0f, 0.0f, _position.z - _radius, _position.z + _radius);
@@ -131,3 +121,16 @@ void CogAlgorithm::apply_rigid_body_force(const Util::Vector & force, float dt)
 	_position = new_position;
 }
 
+
+void CogAlgorithm::draw() {
+	ImGui::BeginGroup();
+        if (gEngine->isAgentSelected(this)) {
+		ImGui::Text("Agent: %ld (selected)", _id);
+	}
+	else {
+		ImGui::Text("Agent: %ld", _id);
+	}
+	ImGui::Text("Agent neighbor size: %ld", _collisionAgents.size());
+	ImGui::Text("Obstacle neighbor size: %ld", _collisionObstacles.size());
+	ImGui::EndGroup();
+}

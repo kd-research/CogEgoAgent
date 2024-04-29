@@ -9,9 +9,8 @@ public:
 	Util::Vector compute_agent_collision_force();
 	Util::Vector compute_obstacle_collision_force();
 
-	void check_neighbors();
 	void apply_rigid_body_force(const Util::Vector & force, float dt);
-
+	void draw();
 protected:
 	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
 	std::vector<SteerLib::AgentInterface *> _collisionAgents;

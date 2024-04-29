@@ -119,13 +119,15 @@ void CogAgent::draw()
                 else {
                         Util::DrawLib::drawAgentDisc(_position, _forward, _radius);
                 }
+
+                if (_goalQueue.front().goalType == SteerLib::GOAL_TYPE_SEEK_STATIC_TARGET) {
+                        Util::DrawLib::drawFlag(_goalQueue.front().targetLocation);
+                }
         }
         else {
                 Util::DrawLib::drawAgentDisc(_position, _forward, _radius, Util::gGray40);
         }
-        if (_goalQueue.front().goalType == SteerLib::GOAL_TYPE_SEEK_STATIC_TARGET) {
-                Util::DrawLib::drawFlag(_goalQueue.front().targetLocation);
-        }
+        CogAlgorithm::draw();
 #endif
 }
 

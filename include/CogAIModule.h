@@ -3,6 +3,7 @@
 
 #include "SteerLib.h"
 #include "Logger.h"
+#include "CogConfig.h"
 
 extern SteerLib::EngineInterface * gEngine;
 extern SteerLib::SpatialDataBaseInterface * gSpatialDatabase;
@@ -40,7 +41,6 @@ namespace CogAIGlobals {
 class CogAIModule : public SteerLib::ModuleInterface
 {
 public:
-	
 	std::string getDependencies() { return ""; }
 	std::string getConflicts() { return ""; }
 	std::string getData() { return ""; }
@@ -55,10 +55,13 @@ public:
 	void preprocessSimulation();
 	void initializeSimulation();
 	void cleanupSimulation();
-	void draw();
+	void draw() override;
 
 protected:
 	std::string logFilename;
 	bool logStats;
 	Logger * _logger;
+
+private:
+	CogConfig * _config;
 };
