@@ -150,16 +150,19 @@ void CogAlgorithm::apply_rigid_body_force(const Util::Vector &force, float dt)
 
 void CogAlgorithm::draw()
 {
-    ImGui::BeginGroup();
-    if (gEngine->isAgentSelected(this))
+    if (_config->showAgentInfo)
     {
-        ImGui::Text("Agent: %ld (selected)", _id);
+        ImGui::BeginGroup();
+        if (gEngine->isAgentSelected(this))
+        {
+            ImGui::Text("Agent: %ld (selected)", _id);
+        }
+        else
+        {
+            ImGui::Text("Agent: %ld", _id);
+        }
+        ImGui::Text("Agent neighbor size: %ld", _collisionAgents.size());
+        ImGui::Text("Obstacle neighbor size: %ld", _collisionObstacles.size());
+        ImGui::EndGroup();
     }
-    else
-    {
-        ImGui::Text("Agent: %ld", _id);
-    }
-    ImGui::Text("Agent neighbor size: %ld", _collisionAgents.size());
-    ImGui::Text("Obstacle neighbor size: %ld", _collisionObstacles.size());
-    ImGui::EndGroup();
 }

@@ -189,5 +189,7 @@ void CogAIModule::draw()
 	ImGui::Begin("Cog Debug", NULL, ImGuiWindowFlags_None);
 
 	ImGui::Checkbox("Show Visuals", &(_config->showVisuals));
+	ImGui::Checkbox("Show AgentInfo", &(_config->showAgentInfo));
 
+	ImGui::End();
 }

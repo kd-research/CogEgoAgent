@@ -3,14 +3,20 @@
 class CogConfig
 {
   private:
-    CogConfig() { showVisuals = false; }
+    static CogConfig _instance;
+    CogConfig()
+    {
+        showVisuals = false;
+        showAgentInfo = false;
+    }
 
   public:
     static CogConfig *getInstance()
     {
-        static CogConfig _instance;
         return &_instance;
     }
 
     bool showVisuals;
+    bool showAgentInfo;
 };
+
