@@ -3,7 +3,6 @@
 #define AGENT_MASS 80.0f
 #define AGENT_MAX_SPEED 1.5f
 #define AGENT_MAX_FORCE 9999.0f
-#define AGENT_RADIUS 0.5f
 #define AGENT_QUERY_RADIUS 1.0f
 #define COG_VISION_PHI 1.30899f // 75 degrees
 #define COG_VISION_TAU 0.5f
@@ -16,7 +15,6 @@ struct CogAgentParameters
 	float mass;
 	float maxSpeed;
 	float maxForce;
-	float radius;
 	float queryRadius;
 	float visionPhi;
 	float visionTau;
@@ -29,7 +27,6 @@ struct CogAgentParameters
 		mass = AGENT_MASS;
 		maxSpeed = AGENT_MAX_SPEED;
 		maxForce = AGENT_MAX_FORCE;
-		radius = AGENT_RADIUS;
 		queryRadius = AGENT_QUERY_RADIUS;
 		visionPhi = COG_VISION_PHI;
 		visionTau = COG_VISION_TAU;

@@ -140,6 +140,11 @@ void CogAlgorithm::apply_rigid_body_force(const Util::Vector &force, float dt)
 
 void CogAlgorithm::draw()
 {
+    if (_config->showAgentSelectedOnly && !gEngine->isAgentSelected(this))
+    {
+        return;
+    }
+
     if (_config->showAgentInfo)
     {
         ImGui::BeginGroup();
@@ -151,8 +156,17 @@ void CogAlgorithm::draw()
         {
             ImGui::Text("Agent: %ld", _id);
         }
-        ImGui::Text("Agent neighbor size: %ld", _collisionAgents.size());
-        ImGui::Text("Obstacle neighbor size: %ld", _collisionObstacles.size());
+
+        Util::Vector velocityForce = compute_velocity_force();
+        Util::Vector agentCollisionForce = compute_agent_collision_force();
+        Util::Vector obstacleCollisionForce = compute_obstacle_collision_force();
+        ImGui::Text("  Velocity force: (%f, %f, %f)", velocityForce.x, velocityForce.y, velocityForce.z);
+        ImGui::Text("  Agent neighbor size: %ld", _collisionAgents.size());
+        ImGui::Text("  Agent collision force: (%f, %f, %f)", agentCollisionForce.x, agentCollisionForce.y,
+                    agentCollisionForce.z);
+        ImGui::Text("  Obstacle neighbor size: %ld", _collisionObstacles.size());
+        ImGui::Text("  Obstacle collision force: (%f, %f, %f)", obstacleCollisionForce.x, obstacleCollisionForce.y,
+                    obstacleCollisionForce.z);
         ImGui::EndGroup();
     }
 }

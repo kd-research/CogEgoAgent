@@ -4,7 +4,7 @@
 #include "SteerLib.h"
 #include "CogAgentParameters.h"
 
-class CogAlgorithm : virtual public SteerLib::AgentInterface
+class CogAlgorithm : public SteerLib::AgentInterface
 {
 public:
 	CogAlgorithm() { _config = CogConfig::getInstance(); }

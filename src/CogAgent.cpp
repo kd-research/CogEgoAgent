@@ -3,9 +3,6 @@
 #include "CogAIModule.h"
 
 #define AGENT_RADIUS 0.4f
-#define MAX_FORCE_MAGNITUDE 3.0f
-#define MAX_SPEED 1.3f
-#define AGENT_MASS 1.0f
 #define COL_QUERY_RADIUS 1.0f
 
 CogAgent::CogAgent()

@@ -190,6 +190,7 @@ void CogAIModule::draw()
 
 	ImGui::Checkbox("Show Visuals", &(_config->showVisuals));
 	ImGui::Checkbox("Show AgentInfo", &(_config->showAgentInfo));
+	ImGui::Checkbox("Show Selected Only", &(_config->showAgentSelectedOnly));
 
 	ImGui::End();
 }

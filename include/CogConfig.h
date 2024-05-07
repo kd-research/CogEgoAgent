@@ -8,6 +8,7 @@ class CogConfig
     {
         showVisuals = false;
         showAgentInfo = false;
+        showAgentSelectedOnly = false;
     }
 
   public:
@@ -18,5 +19,6 @@ class CogConfig
 
     bool showVisuals;
     bool showAgentInfo;
+    bool showAgentSelectedOnly;
 };
 
