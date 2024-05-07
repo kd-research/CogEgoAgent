@@ -2,6 +2,7 @@
 
 #include "CogConfig.h"
 #include "SteerLib.h"
+#include "CogAgentParameters.h"
 
 class CogAlgorithm : virtual public SteerLib::AgentInterface
 {
@@ -11,6 +12,7 @@ public:
 	Util::Vector compute_agent_collision_force();
 	Util::Vector compute_obstacle_collision_force();
 
+	CogAgentParameters parameters;
 	void apply_rigid_body_force(const Util::Vector & force, float dt);
 	void draw();
 protected:

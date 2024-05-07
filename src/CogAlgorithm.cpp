@@ -1,4 +1,4 @@
-#include <array>
+#include <vector>
 
 #include "CogAlgorithm.h"
 #include "imgui.h"
@@ -8,16 +8,6 @@ extern SteerLib::EngineInterface *gEngine;
 extern SteerLib::SpatialDataBaseInterface *gSpatialDatabase;
 
 #define EPSILON 0.0001f
-#define AGENT_MASS 80.0f
-#define AGENT_MAX_SPEED 1.5f
-#define AGENT_MAX_FORCE 9999.0f
-#define AGENT_RADIUS 0.5f
-#define AGENT_QUERY_RADIUS 1.0f
-#define COG_VISION_PHI 1.30899f // 75 degrees
-#define COG_VISION_TAU 0.5f
-#define COG_VISION_RESOLUTION 50
-#define COG_VISION_RANGE 10.0f
-#define COG_AGENT_K 5000.0f
 
 Util::Vector CogAlgorithm::compute_velocity_force()
 {
@@ -26,19 +16,19 @@ Util::Vector CogAlgorithm::compute_velocity_force()
         _velocity = Util::Vector(CogUtils::NextGaussian(), 0, CogUtils::NextGaussian());
     }
 
-    std::array<Util::Vector, COG_VISION_RESOLUTION> visions;
-    for (int i = 0; i < COG_VISION_RESOLUTION; i++)
+    std::vector<Util::Vector> visions(parameters.visionResolution);
+    for (int i = 0; i < parameters.visionResolution; i++)
     {
-        float angle = COG_VISION_PHI * 2 * i / COG_VISION_RESOLUTION - COG_VISION_PHI;
+        float angle = parameters.visionPhi * 2 * i / parameters.visionResolution - parameters.visionPhi;
         visions[i] = Util::normalize(Util::rotateInXZPlane(_velocity, angle));
     }
 
-    std::array<float, COG_VISION_RESOLUTION> vision_intersections;
-    for (int i = 0; i < COG_VISION_RESOLUTION; i++)
+    std::vector<float> vision_intersections(parameters.visionResolution);
+    for (int i = 0; i < parameters.visionResolution; i++)
     {
         SteerLib::SpatialDatabaseItemPtr hititem;
         Util::Ray ray;
-        ray.initWithLengthInterval(_position, visions[i] * COG_VISION_RANGE);
+        ray.initWithLengthInterval(_position, visions[i] * parameters.visionRange);
         float hit_t = 0;
         if (gSpatialDatabase->trace(ray, hit_t, hititem, this, false))
         {
@@ -46,21 +36,21 @@ Util::Vector CogAlgorithm::compute_velocity_force()
         }
         else
         {
-            vision_intersections[i] = COG_VISION_RANGE;
+            vision_intersections[i] = parameters.visionRange;
         }
     }
 
-    std::array<float, COG_VISION_RESOLUTION> utility_values;
+    std::vector<float> utility_values(parameters.visionResolution);
     float minUtility = std::numeric_limits<float>::max();
     int bestDirectionIndex = 0;
     Util::Vector bestDirection;
     Util::Vector goaldirection = normalize(currentGoal().targetLocation - _position);
 
-    for (int i = 0; i < COG_VISION_RESOLUTION; i++)
+    for (int i = 0; i < parameters.visionResolution; i++)
     {
         float cos_angle = Util::dot(visions[i], goaldirection);
-        float thisUtility = pow(COG_VISION_RANGE, 2) + pow(vision_intersections[i], 2) -
-                            2.0 * cos_angle * COG_VISION_RANGE * vision_intersections[i];
+        float thisUtility = pow(parameters.visionRange, 2) + pow(vision_intersections[i], 2) -
+                            2.0 * cos_angle * parameters.visionRange * vision_intersections[i];
         utility_values[i] = thisUtility;
         if (thisUtility < minUtility)
         {
@@ -70,10 +60,10 @@ Util::Vector CogAlgorithm::compute_velocity_force()
         }
     }
 
-    Util::Vector expectedVelocity = bestDirection * vision_intersections[bestDirectionIndex] / COG_VISION_TAU;
-    expectedVelocity = Util::clamp(expectedVelocity, AGENT_MAX_SPEED);
+    Util::Vector expectedVelocity = bestDirection * vision_intersections[bestDirectionIndex] / parameters.visionTau;
+    expectedVelocity = Util::clamp(expectedVelocity, parameters.maxSpeed);
 
-    return (expectedVelocity - _velocity) / COG_VISION_TAU;
+    return (expectedVelocity - _velocity) / parameters.visionTau;
 }
 
 Util::Vector CogAlgorithm::compute_agent_collision_force()
@@ -88,7 +78,7 @@ Util::Vector CogAlgorithm::compute_agent_collision_force()
         {
             continue;
         }
-        agent_collision_force += relative_direction * COG_AGENT_K / AGENT_MASS;
+        agent_collision_force += relative_direction * parameters.k / parameters.mass;
     }
     return agent_collision_force;
 }
@@ -122,7 +112,7 @@ Util::Vector CogAlgorithm::compute_obstacle_collision_force()
             exit(1);
         } while (0);
 
-        obstacle_collision_force += intersect_norm * COG_AGENT_K / AGENT_MASS;
+        obstacle_collision_force += intersect_norm * parameters.k / parameters.mass;
     }
     return obstacle_collision_force;
 }
@@ -130,12 +120,12 @@ Util::Vector CogAlgorithm::compute_obstacle_collision_force()
 void CogAlgorithm::apply_rigid_body_force(const Util::Vector &force, float dt)
 {
     // Update the rigid body
-    auto clipped_force = Util::clamp(force, AGENT_MAX_FORCE);
-    // auto acceleration = clipped_force / AGENT_MASS;  // Acceleration type force ignores agent mass
+    auto clipped_force = Util::clamp(force, parameters.maxForce);
+    // auto acceleration = clipped_force / parameters.mass;  // Acceleration type force ignores agent mass
     auto acceleration = clipped_force;
 
     _velocity += acceleration * dt;
-    _velocity = Util::clamp(_velocity, AGENT_MAX_SPEED);
+    _velocity = Util::clamp(_velocity, parameters.maxSpeed);
     _forward = Util::normalize(_velocity);
 
     auto new_position = _position + _velocity * dt;
