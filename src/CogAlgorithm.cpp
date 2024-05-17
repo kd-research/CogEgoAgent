@@ -1,3 +1,4 @@
+#include <cmath>
 #include <vector>
 
 #include "CogAlgorithm.h"
@@ -72,7 +73,16 @@ Util::Vector CogAlgorithm::compute_agent_collision_force()
     Util::Vector agent_collision_force = Util::Vector(0, 0, 0);
     for (auto &neighbor : _collisionAgents)
     {
-        Util::Vector relative_direction = Util::normalize(_position - neighbor->position());
+        Util::Vector relative_direction = (_position - neighbor->position());
+        if ((relative_direction).length() > EPSILON)
+        {
+            relative_direction = Util::normalize(relative_direction);
+        }
+        else
+        {
+            relative_direction =
+                Util::rotateInXZPlane(Util::Vector(1, 0, 0), (static_cast<float>(rand()) / RAND_MAX) * 2 * M_PI);
+        }
         bool overlaps = neighbor->overlaps(_position, _radius);
         if (!overlaps)
         {
@@ -106,15 +116,67 @@ Util::Vector CogAlgorithm::compute_obstacle_collision_force()
             if (oriented_box)
             {
                 oriented_box->getDistance(_position, intersect_norm);
+                intersect_norm = Util::normalize(intersect_norm);
                 break;
             }
-            std::cerr << "Unknown obstacle type" << std::endl;
-            exit(1);
+
+            throw std::runtime_error("Unknown obstacle type");
         } while (0);
 
         obstacle_collision_force += intersect_norm * parameters.k / parameters.mass;
     }
     return obstacle_collision_force;
+}
+
+void CogAlgorithm::correct_wall_intrusion(Util::Point &position, Util::Vector &velocity)
+{
+    if (_collisionObstacles.empty())
+        return;
+
+    Util::Vector intersect_sum = Util::Vector(0, 0, 0);
+    for (auto &neighbor : _collisionObstacles)
+    {
+        Util::Vector intersect_norm = Util::Vector(0, 0, 0);
+        do
+        {
+            SteerLib::BoxObstacle *box = dynamic_cast<SteerLib::BoxObstacle *>(neighbor);
+            if (box)
+            {
+                CogUtils::CalculateBoxPointNorm(box->getBounds(), position, intersect_norm);
+                break;
+            }
+
+            SteerLib::OrientedBoxObstacle *oriented_box = dynamic_cast<SteerLib::OrientedBoxObstacle *>(neighbor);
+            if (oriented_box)
+            {
+                oriented_box->getDistance(position, intersect_norm);
+                intersect_norm = Util::normalize(intersect_norm);
+                break;
+            }
+
+            throw std::runtime_error("Unknown obstacle type");
+        } while (0);
+
+        float peneration = neighbor->computePenetration(position, _radius);
+        intersect_sum = intersect_sum + intersect_norm;
+
+        float dot = Util::dot(velocity, intersect_sum);
+        if (dot > 0)
+            continue;
+
+        position = position + intersect_norm * peneration;
+        velocity = velocity - dot * intersect_sum;
+    }
+
+    if (intersect_sum.length() < EPSILON)
+        return;
+
+    float dot = Util::dot(velocity, intersect_sum);
+    if (dot < 0)
+        velocity = velocity - (0.1 + dot) * intersect_sum;
+
+    if (velocity.length() < 0.1)
+        velocity = 0.3 * intersect_sum;
 }
 
 void CogAlgorithm::apply_rigid_body_force(const Util::Vector &force, float dt)
@@ -129,6 +191,8 @@ void CogAlgorithm::apply_rigid_body_force(const Util::Vector &force, float dt)
     _forward = Util::normalize(_velocity);
 
     auto new_position = _position + _velocity * dt;
+    correct_wall_intrusion(new_position, _velocity);
+
     Util::AxisAlignedBox oldBounds(_position.x - _radius, _position.x + _radius, 0.0f, 0.0f, _position.z - _radius,
                                    _position.z + _radius);
     Util::AxisAlignedBox newBounds(new_position.x - _radius, new_position.x + _radius, 0.0f, 0.0f,
