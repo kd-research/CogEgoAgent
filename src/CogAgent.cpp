@@ -117,7 +117,7 @@ void CogAgent::draw()
     if (gEngine->isAgentSelected(this))
     {
         Util::Ray ray;
-        ray.initWithUnitInterval(_position, _forward);
+        ray.initWithUnitInterval(_position, _velocity);
         float t = 0.0f;
         SteerLib::SpatialDatabaseItem *objectFound;
         Util::DrawLib::drawLine(ray.pos, ray.eval(1.0f));

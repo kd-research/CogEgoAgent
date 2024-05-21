@@ -18,10 +18,11 @@ Util::Vector CogAlgorithm::compute_velocity_force()
     }
 
     std::vector<Util::Vector> visions(parameters.visionResolution);
+    Util::Vector normalized_velocity = Util::normalize(_velocity);
     for (int i = 0; i < parameters.visionResolution; i++)
     {
         float angle = parameters.visionPhi * 2 * i / parameters.visionResolution - parameters.visionPhi;
-        visions[i] = Util::normalize(Util::rotateInXZPlane(_velocity, angle));
+        visions[i] = Util::rotateInXZPlane(normalized_velocity, angle);
     }
 
     std::vector<float> vision_intersections(parameters.visionResolution);
@@ -33,7 +34,7 @@ Util::Vector CogAlgorithm::compute_velocity_force()
         float hit_t = 0;
         if (gSpatialDatabase->trace(ray, hit_t, hititem, this, false))
         {
-            vision_intersections[i] = hit_t;
+            vision_intersections[i] = std::min(hit_t, parameters.visionRange);
         }
         else
         {
@@ -45,7 +46,7 @@ Util::Vector CogAlgorithm::compute_velocity_force()
     float minUtility = std::numeric_limits<float>::max();
     int bestDirectionIndex = 0;
     Util::Vector bestDirection;
-    Util::Vector goaldirection = normalize(currentGoal().targetLocation - _position);
+    Util::Vector goaldirection = Util::normalize(currentGoal().targetLocation - _position);
 
     for (int i = 0; i < parameters.visionResolution; i++)
     {
@@ -88,7 +89,9 @@ Util::Vector CogAlgorithm::compute_agent_collision_force()
         {
             continue;
         }
-        agent_collision_force += relative_direction * parameters.k / parameters.mass;
+        auto penetration = neighbor->computePenetration(_position, _radius);
+        agent_collision_force +=
+            relative_direction * (_radius + neighbor->radius() - penetration) * parameters.k / parameters.mass;
     }
     return agent_collision_force;
 }
@@ -160,29 +163,46 @@ void CogAlgorithm::correct_wall_intrusion(Util::Point &position, Util::Vector &v
         float peneration = neighbor->computePenetration(position, _radius);
         intersect_sum = intersect_sum + intersect_norm;
 
-        float dot = Util::dot(velocity, intersect_sum);
+        float dot = Util::dot(velocity, intersect_norm);
         if (dot > 0)
             continue;
 
         position = position + intersect_norm * peneration;
-        velocity = velocity - dot * intersect_sum;
+        velocity = velocity - (1 + parameters.wallcol_mu) * dot * intersect_norm;
     }
 
     if (intersect_sum.length() < EPSILON)
         return;
 
-    float dot = Util::dot(velocity, intersect_sum);
-    if (dot < 0)
-        velocity = velocity - (0.1 + dot) * intersect_sum;
+    // A minor patch to avoid the agent going back and forth
+    // WARN: TODO: Only applicable to SCENE_EVAC scenario !!!
 
-    if (velocity.length() < 0.1)
-        velocity = 0.3 * intersect_sum;
+    // Get velocity component perpendicular to intersect_sum
+    Util::Vector velocity_perpendicular = velocity - Util::dot(velocity, intersect_sum) * intersect_sum;
+
+    // Check if perpendicular component is going opposite to the intersect_sum
+    Util::Vector goaldirection = Util::normalize(currentGoal().targetLocation - _position);
+    float dot_goaldir = Util::dot(velocity_perpendicular, goaldirection);
+
+    if (dot_goaldir < -EPSILON)
+    {
+        // remove velocity component perpendicular to intersect_sum
+        velocity = velocity - velocity_perpendicular;
+    }
+
+    if (velocity.length() < EPSILON)
+    {
+        velocity = 0.5 * intersect_sum;
+    }
 }
 
 void CogAlgorithm::apply_rigid_body_force(const Util::Vector &force, float dt)
 {
-    // Update the rigid body
-    auto clipped_force = Util::clamp(force, parameters.maxForce);
+    // auto force_with_friction = force - _velocity * 0.5f;
+    //  Update the rigid body
+    // auto clipped_force = Util::clamp(force_with_friction, parameters.maxForce);
+    auto force_with_drag = force - _velocity * _velocity.length() * parameters.drag;
+    auto clipped_force = Util::clamp(force_with_drag, parameters.maxForce);
     // auto acceleration = clipped_force / parameters.mass;  // Acceleration type force ignores agent mass
     auto acceleration = clipped_force;
 
@@ -207,6 +227,10 @@ void CogAlgorithm::draw()
     if (_config->showAgentSelectedOnly && !gEngine->isAgentSelected(this))
     {
         return;
+    }
+
+    if (_config->showVisuals)
+    {
     }
 
     if (_config->showAgentInfo)
