@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_C_FLAGS "-O2 -ggdb -Wall")
 set(CMAKE_CXX_FLAGS "-O2 -ggdb -Wall")
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/external/steersuite/build")
 
 add_compile_definitions(ENABLE_GUI)
 add_compile_definitions(ENABLE_GLFW)
@@ -40,3 +41,6 @@ add_library(cog-ai SHARED ${SOURCE_FILES})
 target_include_directories(cog-ai PUBLIC include)
 
 target_link_libraries(cog-ai ${EXTERNAL_LIBS})
+
+install(TARGETS cog-ai DESTINATION lib)
+install(DIRECTORY include/ DESTINATION cog-ai/include)

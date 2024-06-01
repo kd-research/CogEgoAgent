@@ -11,4 +11,7 @@ doxygen:
 clean:
 	rm -rf build/*
 
+install:
+	@$(MAKE) -C build install
+
 .PHONY: default clean
