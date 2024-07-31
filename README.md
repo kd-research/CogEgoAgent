@@ -15,4 +15,10 @@ make
 
 ## Usage
 
+### AI only
+
 In steersuite, set the ModuleLoadPath to `build/` and add parameter `-ai cog-ai`.
+
+### AI with Scenarios
+
+Link project to `build/cog-ai` and compile scenario module.
